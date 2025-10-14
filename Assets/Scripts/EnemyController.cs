@@ -114,7 +114,7 @@ public class EnemyController : MonoBehaviour
     {
         isAttack = true;
         lockOn = false ;
-        bulletPrefab = Instantiate(bulletPrefab,gate.transform.position,Quaternion.Euler(90,0,0));
+        bulletPrefab = Instantiate(bulletPrefab,gate.transform.position,Quaternion.Euler(90,0,0));//gateのrotation * 横
         //bulletPrefab.GetComponent<Rigidbody>().AddForce()   　　　　 ☆次ここから☆
 
 
