@@ -127,6 +127,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1477053371795011445}
+  - component: {fileID: -7872001605449980613}
   - component: {fileID: 6683042985204019288}
   - component: {fileID: 2861548984633659903}
   - component: {fileID: 6787525714402729169}
@@ -155,6 +156,28 @@ Transform:
   - {fileID: 7745207789796025714}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &-7872001605449980613
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7574530475446584854}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d66aa7b5eba729f4ca9249338f821918, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  enemyHP: 5
+  enemySpeed: 5
+  body: {fileID: 6587843039138566610}
+  detectionRange: 80
+  attackRange: 30
+  stopRange: 5
+  bulletPrefab: {fileID: 6661650154168110023, guid: d6af67595b24ddb4dbea8a0f393d64c8, type: 3}
+  gate: {fileID: 7844889968726266431}
+  bulletSpeed: 100
+  fireInterval: 2
 --- !u!136 &6683042985204019288
 CapsuleCollider:
   m_ObjectHideFlags: 0
