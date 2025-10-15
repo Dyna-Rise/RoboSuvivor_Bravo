@@ -3,7 +3,6 @@ using UnityEngine;
 public class PlayerController : MonoBehaviour
 {
     CharacterController controller;
-    Animator animator;
 
     public float moveSpeed = 5.0f; //移動スピード
     public float jumpForce = 8.0f; //ジャンプパワー
@@ -22,7 +21,6 @@ public class PlayerController : MonoBehaviour
     {
         //各コンポーネントを取得
         controller = GetComponent<CharacterController>();
-        //animator = GetComponent<Animator>();
     }
 
     void Update()
@@ -64,18 +62,16 @@ public class PlayerController : MonoBehaviour
             controller.Move(worldMoveDirection * moveSpeed * Time.deltaTime);
 
         }
-        
-       
+
         //もしスタン中なら
         if (IsStun())
         {
-            moveDirection.x = 0;
-            moveDirection.z = 0;
-
             //復活までの時間をカウント
             recoverTime -= Time.deltaTime;
 
+            //点滅処理
             Blinking();
+
         }
 
         //重力分の力を毎フレーム追加
@@ -93,15 +89,11 @@ public class PlayerController : MonoBehaviour
     public void MoveToLeft()
     {
         if (IsStun()) return;
-        //if (controller.isGrounded) ;
-
     }
 
     public void MoveToRight()
     {
         if (IsStun()) return;
-        //if (controller.isGrounded) ;
-
     }
 
     public void MoveToUp()
@@ -123,8 +115,6 @@ public class PlayerController : MonoBehaviour
         {
             moveDirection.y = jumpForce;
 
-            //ジャンプトリガーを設定
-            //animator.SetTrigger("jump");
         }
     }
 
@@ -143,6 +133,29 @@ public class PlayerController : MonoBehaviour
         return stun;
     }
 
+    //CharaControllerに衝突判定が生じたときの処理
+    private void OnTriggerEnter(Collider hit)
+    {
+        if (IsStun()) return;
+
+        //ぶつかった相手がEnemyかEnemyBulletなら
+        if (hit.gameObject.CompareTag("Enemy") || hit.gameObject.CompareTag("EnemyBullet"))
+        {
+            Debug.Log("atata");
+
+            //体力をマイナス
+            life--;
+            recoverTime = 0.5f;
+
+            if (life <= 0)
+            {
+                GameManager.gameState = GameState.gameover;
+                Destroy(gameObject, 0.5f); //少し時間差で自分を消滅
+            }
+            
+        }
+    }
+
     void Blinking()
     {
         //その時のゲーム進行時間で正か負かの値を算出
@@ -153,28 +166,5 @@ public class PlayerController : MonoBehaviour
         else body.SetActive(false);
     }
 
-    //CharaControllerに衝突判定が生じたときの処理
-    private void OnControllerColliderHit(ControllerColliderHit hit)
-    {
-        if (IsStun()) return;
 
-        //ぶつかった相手がEnemyかEnemyBulletなら
-        if (hit.gameObject.CompareTag("Enemy")|| hit.gameObject.CompareTag("EnemyBullet"))
-        {
-            //体力をマイナス
-            life--;
-            recoverTime = 0.5f;
-
-            if (life <= 0)
-            {
-                
-                GameManager.gameState = GameState.gameover;
-                Destroy(gameObject, 0.5f); //少し時間差で自分を消滅
-            }
-            //接触したEnemyを削除
-            Destroy(hit.gameObject);
-        }
-    }
-
-    
 }
