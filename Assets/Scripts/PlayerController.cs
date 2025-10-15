@@ -20,14 +20,36 @@ public class PlayerController : MonoBehaviour
 
     void Start()
     {
+        //各コンポーネントを取得
         controller = GetComponent<CharacterController>();
         animator = GetComponent<Animator>();
     }
 
     void Update()
     {
-        if(GameManager.gameState == GameState.playing || GameManager.gameState == GameState.gameclear)
+        if (controller.isGrounded)
         {
+            if (Input.GetAxis("Vertical") > 0.0f)
+            {
+                //水平方向
+                moveDirection.z = Input.GetAxis("Vertical") * moveSpeed;
+
+            }
+            else
+            {
+                moveDirection.z = 0;
+            }
+        }
+        
+        //垂直方向
+        transform.Rotate(0, Input.GetAxis("Horizontal") * 3, 0);
+
+        //もしゲームステータスがPlayingかgameClearじゃないならなにもしない
+        if (GameManager.gameState != GameState.playing || GameManager.gameState != GameState.gameclear)
+        {
+            //return;
+
+            //もし〇キーが押されたら△に動く
             if (Input.GetKeyDown(KeyCode.LeftArrow) || Input.GetKeyDown(KeyCode.A)) MoveToLeft();
             if (Input.GetKeyDown(KeyCode.RightArrow) || Input.GetKeyDown(KeyCode.D)) MoveToRight();
             if (Input.GetKeyDown(KeyCode.UpArrow) || Input.GetKeyDown(KeyCode.W)) MoveToUp();
@@ -35,21 +57,26 @@ public class PlayerController : MonoBehaviour
             if (Input.GetKeyDown(KeyCode.Space)) Jump();
 
         }
+
         if (IsStun())
         {
             moveDirection.x = 0;
             moveDirection.z = 0;
 
+            //復活までの時間をカウント
             recoverTime -= Time.deltaTime;
 
             IsDamage();
         }
 
+        //重力分の力を毎フレーム追加
         moveDirection.y -= gravity * Time.deltaTime;
 
+        //移動実行
         Vector3 globalDirection = transform.TransformDirection(moveDirection);
         controller.Move(globalDirection * Time.deltaTime);
 
+        //接地していたらYはリセット
         if(controller.isGrounded)moveDirection.y = 0;
         
     }
@@ -57,14 +84,14 @@ public class PlayerController : MonoBehaviour
     public void MoveToLeft()
     {
         if (IsStun()) return;
-        if (controller.isGrounded);
+        if (controller.isGrounded) ;
 
     }
 
     public void MoveToRight()
     {
         if (IsStun()) return;
-        if (controller.isGrounded);
+        if (controller.isGrounded) ;
 
     }
 
@@ -98,6 +125,7 @@ public class PlayerController : MonoBehaviour
     }
 
     
+    //CharaControllerに衝突判定が生じたときの処理
     private void OnControllerColliderHit(ControllerColliderHit hit)
     {
         if (IsStun()) return;
