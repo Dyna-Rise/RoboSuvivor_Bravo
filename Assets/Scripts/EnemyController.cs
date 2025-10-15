@@ -3,6 +3,8 @@ using UnityEngine;
 using UnityEngine.AI;
 
 
+
+
 public class EnemyController : MonoBehaviour
 {
 
@@ -15,6 +17,7 @@ public class EnemyController : MonoBehaviour
     // [SerializeField] Transform self;
     GameObject player;
     NavMeshAgent navMeshAgent;     // NavMeshAgentコンポーネンス
+    new AudioSource  audio;
 
     public float detectionRange = 80f;     // プレイヤーを検知する距離
 
@@ -30,6 +33,10 @@ public class EnemyController : MonoBehaviour
     float timer; //時間経過
 
     float recoverTime = 2f;
+
+    [SerializeField] AudioClip se_Shot;
+    [SerializeField] AudioClip se_Damage;
+    [SerializeField] AudioClip se_Exprosion;
     
 
 
@@ -44,6 +51,7 @@ public class EnemyController : MonoBehaviour
         gameManager = gameMgr.GetComponent<GameManager>();
         navMeshAgent = GetComponent<NavMeshAgent>();
         player = GameObject.FindGameObjectWithTag("Player"); //生成されるたびにplayerのtransformを取得
+        audio = GetComponent<AudioSource>();
 
     }
 
@@ -189,6 +197,8 @@ public class EnemyController : MonoBehaviour
 
         body.SetActive(true);//最後は表示する
 
+
+
         
 
         return isDamage;
@@ -203,5 +213,10 @@ public class EnemyController : MonoBehaviour
 
         else body.SetActive(false);
 
+    }
+
+    void SEPlay(SEType type)
+    {
+        
     }
 }
