@@ -36,6 +36,7 @@ public class GameManager : MonoBehaviour
     void Start()
     {
         gameState = GameState.playing;
+       
         //最初にゲートの数を把握
         numOfGate = GameObject.FindGameObjectsWithTag("Gate").Length;
 

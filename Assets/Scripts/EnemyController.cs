@@ -1,5 +1,4 @@
 using System.Collections;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -13,7 +12,8 @@ public class EnemyController : MonoBehaviour
 
     public GameObject body; //点滅されるbody
 
-    GameObject player;      // プレイヤーのTransformをInspectorから設定   [SerializeField] とかpublicでってことですか？
+    // [SerializeField] Transform self;
+    GameObject player;
     NavMeshAgent navMeshAgent;     // NavMeshAgentコンポーネンス
 
     public float detectionRange = 80f;     // プレイヤーを検知する距離
@@ -29,6 +29,9 @@ public class EnemyController : MonoBehaviour
 
     float timer; //時間経過
 
+    float recoverTime = 2f;
+    
+
 
 
     GameObject gameMgr; //ゲームマネージャーusing UnityEngine;
@@ -39,7 +42,9 @@ public class EnemyController : MonoBehaviour
     {
         gameMgr = GameObject.FindGameObjectWithTag("GM");
         gameManager = gameMgr.GetComponent<GameManager>();
-        navMeshAgent = gameMgr.GetComponent<NavMeshAgent>();
+        navMeshAgent = GetComponent<NavMeshAgent>();
+        player = GameObject.FindGameObjectWithTag("Player"); //生成されるたびにplayerのtransformを取得
+
     }
 
     // Update is called once per frame
@@ -47,15 +52,20 @@ public class EnemyController : MonoBehaviour
     {
 
 
-        //playingなら何もしないまたはplayerがいないなら
-        if (GameManager.gameState != GameState.playing && player == null)
+        //playing以外なら何もしないまたはplayerがいないなら
+        if (GameManager.gameState != GameState.playing || player == null)
         {
+            //途中でplayerが消えても止まらない；；
             return;
         }
+        
+        timer += Time.deltaTime;
 
+        //常にPlayerの位置を取得
+        Vector3 playerPos = player.transform.position;
         //常にこのオブジェクトとプレイヤーオブジェクトの距離を測る
-        float playerDistance = Vector3.Distance(player.transform.position, transform.position);
-
+        float playerDistance = Vector3.Distance(playerPos, transform.position);
+       
         //プレイヤーの距離がプレイヤーを検知する距離より大きいなら
         if (playerDistance >= detectionRange)
         {
@@ -63,77 +73,104 @@ public class EnemyController : MonoBehaviour
             lockOn = false; //プレイヤーの方を向くフラグをOFF
         }
         //プレイヤーの距離がプレイヤーを検知する距離内だったら
-        else
+        else if (playerDistance <= detectionRange)
         {
-            navMeshAgent.SetDestination(player.transform.position);//playerを追う
+            navMeshAgent.SetDestination(playerPos);//playerを追う
             navMeshAgent.isStopped = false;//止めるフラグOFF
             lockOn = true;//プレイヤーの方を向くフラグをON
+            
 
             //攻撃距離内だったら
             if (playerDistance <= attackRange)
             {
-                //アタックコルーチン発動
-                StartCoroutine(Ataack());
+                //動きをゆっくり
+                navMeshAgent.speed = 2.5f;
+
+                if(timer >= fireInterval)
+                {
+                    if (!isAttack)
+                    {
+
+                        //アタックコルーチン発動
+                        StartCoroutine(Ataack());
+                    }
+                }
+
+               
 
                 //もしプレイヤーの距離が接近限界距離より小さいなら
                 if (playerDistance <= stopRange)
                 {
                     navMeshAgent.isStopped = true;//止める
                 }
-                else navMeshAgent.isStopped = true;//止める
+                
 
 
             }
+            else
+            {
+                navMeshAgent.speed = 5;//speedを通常スピードに(5）
+            }
+
         }
 
         //lookOnがtrueなら
-        if(lockOn)
+        if (lockOn)
         {
-            transform.LookAt(player.transform);//playerの方を向く
+            transform.LookAt(playerPos);//playerの方を向く
         }
 
-        if (enemyHP == 0)
+        if (enemyHP <= 0)
         {
 
             //死んだらEnemyListを削除   
-            gameManager.enemyList.RemoveAt(0);
+            //gameManager.enemyList.RemoveAt(0);
             //自分も破壊
             Destroy(gameObject);
 
         }
-        if (isDamage)
+
+        if (IsDamage())//覚えておく。IsDamageメソッド発動してからそれの値がtureなら　覚えておく。
         {
-            Blinking();//点滅処理
+            recoverTime -= Time.deltaTime;//recoverTimeが0になるまで経過時間を引く
+            Blinking();//点滅処理  
         }
 
-
+        
 
     }
 
     IEnumerator Ataack()
     {
         isAttack = true;
-        lockOn = false ;
-        bulletPrefab = Instantiate(bulletPrefab,gate.transform.position,Quaternion.Euler(90,0,0));//gateのrotation * 横
-        //bulletPrefab.GetComponent<Rigidbody>().AddForce()   　　　　 ☆次ここから☆
+        lockOn = false;
+        GameObject obj = Instantiate(bulletPrefab, gate.transform.position,gate.transform.rotation * Quaternion.Euler(90, 0, 0));
 
+        
 
-        Debug.Log("攻撃中だよ");
+        obj.GetComponent<Rigidbody>().AddForce(gate.transform.forward * bulletSpeed, ForceMode.Impulse); 　　　　
+        timer = 0;
 
+        //Debug.Log("攻撃中だよ");
+       //yield return new WaitForSeconds(1);
+        isAttack = false;
+        lockOn = true; 
         yield break;
     }
 
 
     //攻撃を食らったら(一旦triggerEnter)
-    private void OnTriggerEnter2D(Collider2D collision)
+    private void OnTriggerEnter (Collider collision)
     {
         if (collision.gameObject.CompareTag("PlayerBullet"))
         {
             enemyHP--;
 
-            isDamage = true;
+            recoverTime = 0.5f;//当たった時
 
-            Invoke("IsDamage", 1f);
+            
+
+            Debug.Log(enemyHP);
 
 
         }
@@ -141,14 +178,20 @@ public class EnemyController : MonoBehaviour
         {
             enemyHP = enemyHP - 3;
         }
+        
     }
 
-    void IsDamage()
+    //recoverが0より大きくなった瞬間にtrueになって、Updataで経過時間引いて0になった瞬間にfalseにするメソッド
+    //その時間差で点滅処理をさせる
+    bool IsDamage()　
     {
+        bool isDamage = recoverTime > 0; //recoverTimeが0以上だったら
 
         body.SetActive(true);//最後は表示する
 
-        isDamage = false;//OFF
+        
+
+        return isDamage;
     }
 
     //点滅処理
