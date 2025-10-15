@@ -22,28 +22,11 @@ public class PlayerController : MonoBehaviour
     {
         //各コンポーネントを取得
         controller = GetComponent<CharacterController>();
-        animator = GetComponent<Animator>();
+        //animator = GetComponent<Animator>();
     }
 
     void Update()
     {
-        if (controller.isGrounded)
-        {
-            if (Input.GetAxis("Vertical") > 0.0f)
-            {
-                //水平方向
-                moveDirection.z = Input.GetAxis("Vertical") * moveSpeed;
-
-            }
-            else
-            {
-                moveDirection.z = 0;
-            }
-        }
-        
-        //垂直方向
-        transform.Rotate(0, Input.GetAxis("Horizontal") * 3, 0);
-
         //もしゲームステータスがPlayingかgameClearじゃないならなにもしない
         if (GameManager.gameState != GameState.playing || GameManager.gameState != GameState.gameclear)
         {
@@ -58,6 +41,32 @@ public class PlayerController : MonoBehaviour
 
         }
 
+        //もし地面に接地していたら
+        if (controller.isGrounded)
+        {
+            float horizontal = Input.GetAxis("Horizontal");
+            float vertical = Input.GetAxis("Vertical");
+
+            // ローカル座標系での移動方向
+            Vector3 moveDirection = new Vector3(horizontal, 0, vertical);
+
+            // 正規化して速度を一定に保つ
+            if (moveDirection.magnitude > 1)
+            {
+                moveDirection.Normalize();
+            }
+
+            // TransformDirectionでローカル座標からワールド座標に変換
+            // これにより、プレイヤーの回転が考慮される
+            Vector3 worldMoveDirection = transform.TransformDirection(moveDirection);
+
+            // CharacterController.Moveにワールド座標での移動量を渡す
+            controller.Move(worldMoveDirection * moveSpeed * Time.deltaTime);
+
+        }
+        
+       
+        //もしスタン中なら
         if (IsStun())
         {
             moveDirection.x = 0;
@@ -66,7 +75,7 @@ public class PlayerController : MonoBehaviour
             //復活までの時間をカウント
             recoverTime -= Time.deltaTime;
 
-            IsDamage();
+            Blinking();
         }
 
         //重力分の力を毎フレーム追加
@@ -84,14 +93,14 @@ public class PlayerController : MonoBehaviour
     public void MoveToLeft()
     {
         if (IsStun()) return;
-        if (controller.isGrounded) ;
+        //if (controller.isGrounded) ;
 
     }
 
     public void MoveToRight()
     {
         if (IsStun()) return;
-        if (controller.isGrounded) ;
+        //if (controller.isGrounded) ;
 
     }
 
@@ -115,16 +124,35 @@ public class PlayerController : MonoBehaviour
             moveDirection.y = jumpForce;
 
             //ジャンプトリガーを設定
-            animator.SetTrigger("jump");
+            //animator.SetTrigger("jump");
         }
+    }
+
+    public int Life()
+    {
+        return life;
     }
 
     bool IsStun()
     {
-        return recoverTime > 0.0f || life <= 0;
+        //recoverTimeが作動中かLifeが0になった場合はStunフラグがON
+        bool stun = recoverTime > 0.0f || life <= 0;
+        //StunフラグがOFFの場合はボディを確実に表示
+        if (!stun) body.SetActive(true);
+        //Stunフラグをリターン
+        return stun;
     }
 
-    
+    void Blinking()
+    {
+        //その時のゲーム進行時間で正か負かの値を算出
+        float val = Mathf.Sin(Time.time * 50);
+        //正の周期なら表示
+        if (val >= 0) body.SetActive(true);
+        //負の周期なら非表示
+        else body.SetActive(false);
+    }
+
     //CharaControllerに衝突判定が生じたときの処理
     private void OnControllerColliderHit(ControllerColliderHit hit)
     {
@@ -148,13 +176,5 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    void IsDamage()
-    {
-        //その時のゲーム進行時間で正か負かの値を算出
-        float val = Mathf.Sin(Time.time * 50);
-        //正の周期なら表示
-        if (val >= 0) body.SetActive(true);
-        //負の周期なら非表示
-        else body.SetActive(false);
-    }
+    
 }
