@@ -14,7 +14,7 @@ public class PlayerController : MonoBehaviour
     public GameObject body; //点滅対象
     bool isDamage; //ダメージフラグ
 
-    public int life = 10;
+    public static int life = 10;
     
 
     void Start()

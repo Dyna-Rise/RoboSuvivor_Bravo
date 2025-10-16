@@ -2,15 +2,50 @@ using UnityEngine;
 
 public class PlayerAnimation : MonoBehaviour
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
+    public Animator anime;
+
+    float axisH;
+    float axisV;
+
     void Start()
     {
         
     }
 
-    // Update is called once per frame
     void Update()
     {
-        
+        if (axisH != 0 || axisV != 0)
+        {
+            anime.SetBool("walk", true);
+
+            if (Input.GetAxisRaw("Horizontal") > 0)
+            {
+                anime.SetInteger("direction", 3);
+            }
+            if (Input.GetAxisRaw("Horizontal") < 0)
+            {
+                anime.SetInteger("direction", 1);
+            }
+            if (Input.GetAxisRaw("Vertical") > 0)
+            {
+                anime.SetInteger("direction", 0);
+            }
+            if (Input.GetAxisRaw("Vertical") < 0)
+            {
+                anime.SetInteger("direction", 2);
+            }
+            
+        }
+        else
+        {
+            anime.SetBool("walk", false);
+        }
+
+        if (Input.GetButtonDown("Jump"))
+        {
+            Debug.Log("janp");
+            anime.SetTrigger("Jump");
+        }
+
     }
 }
