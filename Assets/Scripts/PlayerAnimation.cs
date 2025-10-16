@@ -41,11 +41,14 @@ public class PlayerAnimation : MonoBehaviour
             anime.SetBool("walk", false);
         }
 
+        //スペースキーが押されたら
         if (Input.GetButtonDown("Jump"))
         {
             Debug.Log("janp");
             anime.SetTrigger("Jump");
         }
+        //左クリックされたらセットトリガーショット
+        //ゲームステータスがゲームオーバーになったらdie
 
     }
 }

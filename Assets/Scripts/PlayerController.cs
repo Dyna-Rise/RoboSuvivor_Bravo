@@ -1,3 +1,4 @@
+using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
 
 public class PlayerController : MonoBehaviour
@@ -14,13 +15,25 @@ public class PlayerController : MonoBehaviour
     public GameObject body; //点滅対象
     bool isDamage; //ダメージフラグ
 
-    public static int life = 10;
+    public int life = 10;
     
+    //音にまつわるコンポーネントとSE音情報
+    AudioSource audio;
+    public AudioClip se_shot;
+    public AudioClip se_damage;
+    public AudioClip se_jump;
+    public AudioClip se_walk;
 
+    
     void Start()
     {
+        //オーディオコンポーネントを取得
+        audio = GetComponent<AudioSource>();
         //各コンポーネントを取得
         controller = GetComponent<CharacterController>();
+        //GameManager.
+        
+
     }
 
     void Update()
@@ -37,6 +50,7 @@ public class PlayerController : MonoBehaviour
             if (Input.GetKeyDown(KeyCode.DownArrow) || Input.GetKeyDown(KeyCode.S)) MoveToDown();
             if (Input.GetKeyDown(KeyCode.Space)) Jump();
 
+            
         }
 
         //もし地面に接地していたら
@@ -89,22 +103,26 @@ public class PlayerController : MonoBehaviour
     public void MoveToLeft()
     {
         if (IsStun()) return;
+        SEPlay(SEType.Walk);
     }
 
     public void MoveToRight()
     {
         if (IsStun()) return;
+        SEPlay(SEType.Walk);
     }
 
     public void MoveToUp()
     {
         if (IsStun()) return;
+        SEPlay(SEType.Walk);
 
     }
 
     public void MoveToDown()
     {
         if (IsStun()) return;
+        SEPlay(SEType.Walk);
 
     }
 
@@ -113,6 +131,7 @@ public class PlayerController : MonoBehaviour
         if (IsStun()) return;
         if (controller.isGrounded)
         {
+            SEPlay(SEType.Jump);
             moveDirection.y = jumpForce;
 
         }
@@ -142,6 +161,7 @@ public class PlayerController : MonoBehaviour
         if (hit.gameObject.CompareTag("Enemy") || hit.gameObject.CompareTag("EnemyBullet"))
         {
             Debug.Log("atata");
+            SEPlay(SEType.Damage);
 
             //体力をマイナス
             life--;
@@ -164,6 +184,26 @@ public class PlayerController : MonoBehaviour
         if (val >= 0) body.SetActive(true);
         //負の周期なら非表示
         else body.SetActive(false);
+    }
+
+    //SE再生
+    public void SEPlay(SEType type)
+    {
+        switch (type)
+        {
+            case SEType.Shot:
+                audio.PlayOneShot(se_shot);
+                break;
+            case SEType.Damage:
+                audio.PlayOneShot(se_damage);
+                break;
+            case SEType.Jump:
+                audio.PlayOneShot(se_jump);
+                break;
+            case SEType.Walk:
+                audio.PlayOneShot(se_walk);
+                break;
+        }
     }
 
 
