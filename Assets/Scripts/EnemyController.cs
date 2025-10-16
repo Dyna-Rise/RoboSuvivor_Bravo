@@ -8,41 +8,43 @@ using UnityEngine.AI;
 public class EnemyController : MonoBehaviour
 {
 
-    public int enemyHP = 5; //“G‚ÌHP
-    public float enemySpeed = 5.0f; //“G‚ÌƒXƒs[ƒh
-    bool isDamage; //ƒ_ƒ[ƒW’†ƒtƒ‰ƒO
+    public int enemyHP = 5; //æ•µã®HP
+    public float enemySpeed = 5.0f; //æ•µã®ã‚¹ãƒ”ãƒ¼ãƒ‰
+    bool isDamage; //ãƒ€ãƒ¡ãƒ¼ã‚¸ä¸­ãƒ•ãƒ©ã‚°
 
-    public GameObject body; //“_–Å‚³‚ê‚ébody
+    public GameObject body; //ç‚¹æ»…ã•ã‚Œã‚‹body
 
     // [SerializeField] Transform self;
     GameObject player;
-    NavMeshAgent navMeshAgent;     // NavMeshAgentƒRƒ“ƒ|[ƒlƒ“ƒX
-    new AudioSource  audio;
+    NavMeshAgent navMeshAgent;     // NavMeshAgentã‚³ãƒ³ãƒãƒ¼ãƒãƒ³ã‚¹
+    new AudioSource audio;
 
-    public float detectionRange = 80f;     // ƒvƒŒƒCƒ„[‚ğŒŸ’m‚·‚é‹——£
+    public float detectionRange = 80f;     // ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ã‚’æ¤œçŸ¥ã™ã‚‹è·é›¢
 
-    bool isAttack; //UŒ‚’†ƒtƒ‰ƒO
-    public float attackRange = 30f;         // UŒ‚‚ğŠJn‚·‚é‹——£
-    public float stopRange = 5f; //Ú‹ßŒÀŠE‹——£
-    public GameObject bulletPrefab;     // ”­Ë‚·‚é’e‚ÌPrefab
-    public GameObject gate;            // ’e‚ğ”­Ë‚·‚éˆÊ’u
-    public float bulletSpeed = 100f;    // ”­Ë‚·‚é’e‚Ì‘¬“x 
-    public float fireInterval = 2.0f; //’e‚ğ”­Ë‚·‚éƒCƒ“ƒ^[ƒoƒ‹
-    bool lockOn = true; //ƒ^[ƒQƒbƒg
+    bool isAttack; //æ”»æ’ƒä¸­ãƒ•ãƒ©ã‚°
+    public float attackRange = 30f;         // æ”»æ’ƒã‚’é–‹å§‹ã™ã‚‹è·é›¢
+    public float stopRange = 5f; //æ¥è¿‘é™ç•Œè·é›¢
+    public GameObject bulletPrefab;     // ç™ºå°„ã™ã‚‹å¼¾ã®Prefab
+    public GameObject gate;            // å¼¾ã‚’ç™ºå°„ã™ã‚‹ä½ç½®
+    public float bulletSpeed = 100f;    // ç™ºå°„ã™ã‚‹å¼¾ã®é€Ÿåº¦ 
+    public float fireInterval = 2.0f; //å¼¾ã‚’ç™ºå°„ã™ã‚‹ã‚¤ãƒ³ã‚¿ãƒ¼ãƒãƒ«
+    bool lockOn = true; //ã‚¿ãƒ¼ã‚²ãƒƒãƒˆ
 
-    float timer; //ŠÔŒo‰ß
+    float timer; //æ™‚é–“çµŒé
 
-    float recoverTime = 2f;
+    float recoverTime = 0f;
+
+    bool death = false;
 
     [SerializeField] AudioClip se_Shot;
     [SerializeField] AudioClip se_Damage;
     [SerializeField] AudioClip se_Exprosion;
-    
 
 
 
-    GameObject gameMgr; //ƒQ[ƒ€ƒ}ƒl[ƒWƒƒ[using UnityEngine;
-    GameManager gameManager;
+
+    GameObject gameMgr; //ã‚²ãƒ¼ãƒ ãƒãƒãƒ¼ã‚¸ãƒ£ãƒ¼using UnityEngine;
+    GameManager gameManager;//Listå‰Šé™¤ã™ã‚‹æ™‚ã«ä½¿ã†ã‹ã‚‚
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -50,7 +52,7 @@ public class EnemyController : MonoBehaviour
         gameMgr = GameObject.FindGameObjectWithTag("GM");
         gameManager = gameMgr.GetComponent<GameManager>();
         navMeshAgent = GetComponent<NavMeshAgent>();
-        player = GameObject.FindGameObjectWithTag("Player"); //¶¬‚³‚ê‚é‚½‚Ñ‚Éplayer‚Ìtransform‚ğæ“¾
+        player = GameObject.FindGameObjectWithTag("Player"); //ç”Ÿæˆã•ã‚Œã‚‹ãŸã³ã«playerã®transformã‚’å–å¾—
         audio = GetComponent<AudioSource>();
 
     }
@@ -60,91 +62,94 @@ public class EnemyController : MonoBehaviour
     {
 
 
-        //playingˆÈŠO‚È‚ç‰½‚à‚µ‚È‚¢‚Ü‚½‚Íplayer‚ª‚¢‚È‚¢‚È‚ç
+        //playingä»¥å¤–ãªã‚‰ä½•ã‚‚ã—ãªã„ã¾ãŸã¯playerãŒã„ãªã„ãªã‚‰
         if (GameManager.gameState != GameState.playing || player == null)
         {
-            //“r’†‚Åplayer‚ªÁ‚¦‚Ä‚à~‚Ü‚ç‚È‚¢GG
+            //é€”ä¸­ã§playerãŒæ¶ˆãˆã¦ã‚‚æ­¢ã¾ã‚‰ãªã„ï¼›ï¼›
             return;
         }
-        
+
         timer += Time.deltaTime;
 
-        //í‚ÉPlayer‚ÌˆÊ’u‚ğæ“¾
+        //å¸¸ã«Playerã®ä½ç½®ã‚’å–å¾—
         Vector3 playerPos = player.transform.position;
-        //í‚É‚±‚ÌƒIƒuƒWƒFƒNƒg‚ÆƒvƒŒƒCƒ„[ƒIƒuƒWƒFƒNƒg‚Ì‹——£‚ğ‘ª‚é
+        //å¸¸ã«ã“ã®ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã¨ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã®è·é›¢ã‚’æ¸¬ã‚‹
         float playerDistance = Vector3.Distance(playerPos, transform.position);
-       
-        //ƒvƒŒƒCƒ„[‚Ì‹——£‚ªƒvƒŒƒCƒ„[‚ğŒŸ’m‚·‚é‹——£‚æ‚è‘å‚«‚¢‚È‚ç
+
+        //ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ã®è·é›¢ãŒãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ã‚’æ¤œçŸ¥ã™ã‚‹è·é›¢ã‚ˆã‚Šå¤§ãã„ãªã‚‰
         if (playerDistance >= detectionRange)
         {
-            navMeshAgent.isStopped = true;//~‚ß‚é
-            lockOn = false; //ƒvƒŒƒCƒ„[‚Ì•û‚ğŒü‚­ƒtƒ‰ƒO‚ğOFF
+            navMeshAgent.isStopped = true;//æ­¢ã‚ã‚‹
+            lockOn = false; //ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ã®æ–¹ã‚’å‘ããƒ•ãƒ©ã‚°ã‚’OFF
         }
-        //ƒvƒŒƒCƒ„[‚Ì‹——£‚ªƒvƒŒƒCƒ„[‚ğŒŸ’m‚·‚é‹——£“à‚¾‚Á‚½‚ç
+        //ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ã®è·é›¢ãŒãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ã‚’æ¤œçŸ¥ã™ã‚‹è·é›¢å†…ã ã£ãŸã‚‰
         else if (playerDistance <= detectionRange)
         {
-            navMeshAgent.SetDestination(playerPos);//player‚ğ’Ç‚¤
-            navMeshAgent.isStopped = false;//~‚ß‚éƒtƒ‰ƒOOFF
-            lockOn = true;//ƒvƒŒƒCƒ„[‚Ì•û‚ğŒü‚­ƒtƒ‰ƒO‚ğON
-            
+            navMeshAgent.SetDestination(playerPos);//playerã‚’è¿½ã†
+            navMeshAgent.isStopped = false;//æ­¢ã‚ã‚‹ãƒ•ãƒ©ã‚°OFF
+            lockOn = true;//ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ã®æ–¹ã‚’å‘ããƒ•ãƒ©ã‚°ã‚’ON
 
-            //UŒ‚‹——£“à‚¾‚Á‚½‚ç
+
+            //æ”»æ’ƒè·é›¢å†…ã ã£ãŸã‚‰
             if (playerDistance <= attackRange)
             {
-                //“®‚«‚ğ‚ä‚Á‚­‚è
+                //å‹•ãã‚’ã‚†ã£ãã‚Š
                 navMeshAgent.speed = 2.5f;
 
-                if(timer >= fireInterval)
+                if (timer >= fireInterval)
                 {
                     if (!isAttack)
                     {
 
-                        //ƒAƒ^ƒbƒNƒRƒ‹[ƒ`ƒ“”­“®
+                        //ã‚¢ã‚¿ãƒƒã‚¯ã‚³ãƒ«ãƒ¼ãƒãƒ³ç™ºå‹•
                         StartCoroutine(Ataack());
                     }
                 }
 
-               
 
-                //‚à‚µƒvƒŒƒCƒ„[‚Ì‹——£‚ªÚ‹ßŒÀŠE‹——£‚æ‚è¬‚³‚¢‚È‚ç
+
+                //ã‚‚ã—ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ã®è·é›¢ãŒæ¥è¿‘é™ç•Œè·é›¢ã‚ˆã‚Šå°ã•ã„ãªã‚‰
                 if (playerDistance <= stopRange)
                 {
-                    navMeshAgent.isStopped = true;//~‚ß‚é
+                    navMeshAgent.isStopped = true;//æ­¢ã‚ã‚‹
                 }
-                
+
 
 
             }
             else
             {
-                navMeshAgent.speed = 5;//speed‚ğ’ÊíƒXƒs[ƒh‚É(5j
+                navMeshAgent.speed = 5;//speedã‚’é€šå¸¸ã‚¹ãƒ”ãƒ¼ãƒ‰ã«(5ï¼‰
             }
 
         }
 
-        //lookOn‚ªtrue‚È‚ç
+        //lookOnãŒtrueãªã‚‰
         if (lockOn)
         {
-            transform.LookAt(playerPos);//player‚Ì•û‚ğŒü‚­
+            transform.LookAt(playerPos);//playerã®æ–¹ã‚’å‘ã
         }
 
         if (enemyHP <= 0)
         {
+            if (!death)
+                //æ­»ã‚“ã ã‚‰EnemyListã‚’å‰Šé™¤   
+                //gameManager.enemyList.RemoveAt(0);
 
-            //€‚ñ‚¾‚çEnemyList‚ğíœ   
-            //gameManager.enemyList.RemoveAt(0);
-            //©•ª‚à”j‰ó
+                SEPlay(SEType.Explosion);
+            death = true;
+            //è‡ªåˆ†ã‚‚ç ´å£Š
             Destroy(gameObject);
 
         }
 
-        if (IsDamage())//Šo‚¦‚Ä‚¨‚­BIsDamageƒƒ\ƒbƒh”­“®‚µ‚Ä‚©‚ç‚»‚ê‚Ì’l‚ªture‚È‚ç@Šo‚¦‚Ä‚¨‚­B
+        if (IsDamage())//è¦šãˆã¦ãŠãã€‚IsDamageãƒ¡ã‚½ãƒƒãƒ‰ç™ºå‹•ã—ã¦ã‹ã‚‰ãã‚Œã®å€¤ãŒtureãªã‚‰ã€€è¦šãˆã¦ãŠãã€‚
         {
-            recoverTime -= Time.deltaTime;//recoverTime‚ª0‚É‚È‚é‚Ü‚ÅŒo‰ßŠÔ‚ğˆø‚­
-            Blinking();//“_–Åˆ—  
+            recoverTime -= Time.deltaTime;//recoverTimeãŒ0ã«ãªã‚‹ã¾ã§çµŒéæ™‚é–“ã‚’å¼•ã
+            Blinking();//ç‚¹æ»…å‡¦ç†  
         }
 
-        
+
 
     }
 
@@ -152,31 +157,32 @@ public class EnemyController : MonoBehaviour
     {
         isAttack = true;
         lockOn = false;
-        GameObject obj = Instantiate(bulletPrefab, gate.transform.position,gate.transform.rotation * Quaternion.Euler(90, 0, 0));
+        GameObject obj = Instantiate(bulletPrefab, gate.transform.position, gate.transform.rotation * Quaternion.Euler(90, 0, 0));
 
-        
+        obj.GetComponent<Rigidbody>().AddForce(gate.transform.forward * bulletSpeed, ForceMode.Impulse);
 
-        obj.GetComponent<Rigidbody>().AddForce(gate.transform.forward * bulletSpeed, ForceMode.Impulse); @@@@
+        SEPlay(SEType.Shot);
+
         timer = 0;
 
-        //Debug.Log("UŒ‚’†‚¾‚æ");
-       //yield return new WaitForSeconds(1);
+        //Debug.Log("æ”»æ’ƒä¸­ã ã‚ˆ");
+        //yield return new WaitForSeconds(1);
         isAttack = false;
-        lockOn = true; 
+        lockOn = true;
         yield break;
     }
 
 
-    //UŒ‚‚ğH‚ç‚Á‚½‚ç(ˆê’UtriggerEnter)
-    private void OnTriggerEnter (Collider collision)
+    //æ”»æ’ƒã‚’é£Ÿã‚‰ã£ãŸã‚‰(ä¸€æ—¦triggerEnter)
+    private void OnTriggerEnter(Collider collision)
     {
         if (collision.gameObject.CompareTag("PlayerBullet"))
         {
             enemyHP--;
 
-            recoverTime = 0.5f;//“–‚½‚Á‚½
+            recoverTime = 0.5f;//å½“ãŸã£ãŸæ™‚
 
-            
+            SEPlay(SEType.Damage);//ä½•ã‹ã«å½“ãŸã£ãŸæ™‚ç‚¹ã§é³´ã‚‰ã—ã¦ã‚‚ã„ã„ã‘ã©ä»Šå¾Œã®ã“ã¨ã‚’è€ƒãˆã¦ãã‚Œãã‚Œã«ã„ã‚Œã‚‹
 
             Debug.Log(enemyHP);
 
@@ -185,26 +191,30 @@ public class EnemyController : MonoBehaviour
         if (collision.gameObject.CompareTag("PlayerSword"))
         {
             enemyHP = enemyHP - 3;
+
+            SEPlay(SEType.Damage);
+
+            Debug.Log(enemyHP);
         }
-        
+
     }
 
-    //recover‚ª0‚æ‚è‘å‚«‚­‚È‚Á‚½uŠÔ‚Étrue‚É‚È‚Á‚ÄAUpdata‚ÅŒo‰ßŠÔˆø‚¢‚Ä0‚É‚È‚Á‚½uŠÔ‚Éfalse‚É‚·‚éƒƒ\ƒbƒh
-    //‚»‚ÌŠÔ·‚Å“_–Åˆ—‚ğ‚³‚¹‚é
-    bool IsDamage()@
+    //recoverãŒ0ã‚ˆã‚Šå¤§ãããªã£ãŸç¬é–“ã«trueã«ãªã£ã¦ã€Updataã§çµŒéæ™‚é–“å¼•ã„ã¦0ã«ãªã£ãŸç¬é–“ã«falseã«ã™ã‚‹ãƒ¡ã‚½ãƒƒãƒ‰
+    //ãã®æ™‚é–“å·®ã§ç‚¹æ»…å‡¦ç†ã‚’ã•ã›ã‚‹
+    bool IsDamage()
     {
-        bool isDamage = recoverTime > 0; //recoverTime‚ª0ˆÈã‚¾‚Á‚½‚ç
+        bool isDamage = recoverTime > 0; //recoverTimeãŒ0ä»¥ä¸Šã ã£ãŸã‚‰
 
-        body.SetActive(true);//ÅŒã‚Í•\¦‚·‚é
+        body.SetActive(true);//æœ€å¾Œã¯è¡¨ç¤ºã™ã‚‹
 
 
 
-        
+
 
         return isDamage;
     }
 
-    //“_–Åˆ—
+    //ç‚¹æ»…å‡¦ç†
     void Blinking()
     {
         float val = Mathf.Sin(Time.time * 50);
@@ -217,6 +227,22 @@ public class EnemyController : MonoBehaviour
 
     void SEPlay(SEType type)
     {
-        
+        switch (type)
+        {
+            case SEType.Shot:
+                audio.PlayOneShot(se_Shot);
+                break;
+            case SEType.Damage:
+                audio.PlayOneShot(se_Damage);
+                break;
+            case SEType.Explosion:
+                //audio.PlayOneShot(se_Exprosion);
+                AudioSource.PlayClipAtPoint(se_Exprosion, transform.position);//ã“ã®ã‚„ã‚Šæ–¹ã ã¨éŸ³ãŒå°ã•ã„æ°—ãŒã—ã¾ã™
+                break;
+
+
+        }
     }
+
+   
 }
