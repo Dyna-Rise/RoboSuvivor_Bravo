@@ -1,0 +1,95 @@
+担当A
+
+Playerの動き
+・PlayerController.cs(Player)
+上下左右で前後・左右（カニ歩き）
+テキストNejikoControllerの初期型を参考
+※左右キーをおしても回転せずカニ歩き
+ダメージ処理→BattleCartのPlayer参照
+
+Playerのアニメ
+・PlayerAnimation.cs(Player)
+プロパティ
+direction　歩いている時の方向
+move　そもそも歩いているか止まっているか
+shot　止まっている時、ショットしたら
+jump　ジャンプ
+die　死亡
+左でDirection = 1、右でDirection = 3
+上でDirection = 0、下でDirection = 2
+というそれぞれのif文（上下が優先でOK）でそれぞれのWalkアニメ
+Shotアニメは「止まっている時にシュートするとShotアニメ」
+※動いている時にはShotは対応しなくてOK（動きながらのShotアニメがないので）
+スペースでジャンプアニメ
+死ぬときに死亡アニメ
+
+
+担当B
+
+Shooter（Player）
+左クリックをおしたらPlayerのGateオブジェクトの位置からPlayerBulletプレハブが生成されて飛ぶ
+※PlayerBulletは誕生と同時に数秒後に削除「PlayerBullet.cs」
+Gateオブジェクトの位置からInstatiateされる
+BulletのRigidbodyの機能で飛んでいく
+※BattleCartの時は少し上に放物線を描いた→今回のBulletは上向きの力は考えなくてOK
+残弾があり、コルーチンで回復 →BattleCartのプログラムを参考
+
+PlayerBulletプレハブ　| 縦の方向になっている
+真横に飛ばすには
+「GateのRotation x Quarternion.Euler(90,0,0)」 掛け算したRotation値がInstantiateの第3引数
+
+
+CameraController(MainCamera)
+プレイヤーの追従とマウス操作による「プレイヤーの回転」
+BattleCartのCameraControllerとCameraRotationの合わせ技
+※左右にマウスを動かすと、Playerの角度が変わる
+※Playerの動きに（回転含む）あわえてカメラも特定位置となるように追従する (難度)
+　AIに聞いてヒントを得る
+
+
+担当C
+Enemyの動き
+ある程度HPを持っていて、PlayerBulletによってHP減、0なら消去
+アニメーションは特につけなくてよい（初期アニメのまま）
+・EnemyController.cs(Enemy)
+Rigidbody、CharactorControllerも不要
+9日に学んだNavMeshAgentの仕組みを使って特定距離近づいたらPlayerを追従
+ある程度接近したら、追従をやめてプレイヤーに向かってShot　（例 LookAt()）
+※PlayerのShooterでやりたいこととほぼ同じ
+Gateオブジェクトの位置からInstatiateされる
+EnemyBulletのRigidbodyの機能で飛んでいく
+※BattleCartの時は少し上に放物線を描いた→今回のBulletは上向きの力は考えなくてOK
+Shotするインターバルを考えてほしい（timer変数などで時間経過を計測）
+ダメージ処理→BattleCartのPlayer参照
+
+
+担当D
+Boosの動き
+HPを削ったら削除 ダメージ受けている間は無敵時間
+・BossController.cs(BossシーンのBoss）
+timerで時間計測
+時間が来たら行動※各行動している間は、終わるまでtimerはストップ
+（コルーチンの終わりに攻撃フラグ解除など）
+
+①もし遠ければ　：　ランダムで2択
+　→Tackleコルーチン
+　　特定時点でのPlayerの位置にLerpで移動していくなど (2D MovingBlock)
+　　
+　→Shotコルーチン　（例 LookAt()）
+　　Gateオブジェクトの位置からInstatiateされる
+　　EnemyBulletのRigidbodyの機能で飛んでいく
+　　※BattleCartの時は少し上に放物線を描いた→今回のBulletは上向きの力は考えなくてOK
+　　Shotするインターバルを考えてほしい（timer変数などで時間経過を計測）
+
+②近い
+　→Barrierコルーチン
+　　子オブジェクトにしているBarrierオブジェクトを一定時間たつまで表示
+　　一定時間←コルーチンのwait機能で
+
+　　※BarrierオブジェクトにBarrier.cs 「IllumiBall」の対象物じゃないものを弾く（Hole.cs)を参考
+
+ダメージ処理→BattleCartのPlayer参照
+
+
+
+

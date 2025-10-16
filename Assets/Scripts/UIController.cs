@@ -37,7 +37,6 @@ public class UIController : MonoBehaviour
     void Start()
     {
         //dash = GameObject.FindGameObjectWithTag("Player").GetComponent<DashController>();
-
         currentPlayerHP = GameManager.playerHP;
         currentShotRemainingNum = GameManager.shotRemainingNum;
     }
