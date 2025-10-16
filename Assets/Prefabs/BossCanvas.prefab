@@ -291,6 +291,7 @@ GameObject:
   - component: {fileID: 7038816695655340987}
   - component: {fileID: 6050740850579248694}
   - component: {fileID: 4914305780754266604}
+  - component: {fileID: 6514434690077988332}
   m_Layer: 5
   m_Name: BossCanvas
   m_TagString: Untagged
@@ -381,6 +382,20 @@ MonoBehaviour:
   m_BlockingMask:
     serializedVersion: 2
     m_Bits: 4294967295
+--- !u!114 &6514434690077988332
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4005422371097624994}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5d58ae8913ec9684d88053b8954b7973, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  bossCnt: {fileID: 0}
+  bossSlider: {fileID: 8523774437266646847}
 --- !u!1 &6378372997351278410
 GameObject:
   m_ObjectHideFlags: 0

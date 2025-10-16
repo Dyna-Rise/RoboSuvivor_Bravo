@@ -1,180 +1,230 @@
-using System.Collections;
-using System.Collections.Generic;
-using System.Runtime.CompilerServices;
-using System.Threading;
-using Unity.VisualScripting;
 using UnityEngine;
-using UnityEngine.AI;
-using UnityEngine.SceneManagement;
+using System.Collections;
 
 public class BossController : MonoBehaviour
 {
-    public int enemyHP = 5; //Hipポイント
-    public float enemySpeed = 5.0f;
-    public float times; //時間
-    float movep = 0; //移動補完値（進捗率）
-    bool isSDamege; //ダメージ中のフラグ
-    float recoverTime = 0.0f;
-    public GameObject body; //点滅されるBody
-    public GameObject gate;
+    public int bossHP = 30;
+    bool isDamage;
+    public GameObject body;
+    float timer;
 
-    Vector3 moveDirection = Vector3.zero;
-    CharacterController controller;
+    public float closeRange = 3f; // 近接攻撃をする距離
+    public float attackInterval = 5f; // 攻撃のクールダウン
 
-    GameObject player; //playerをInspectorから設定
-    NavMeshAgent agent; //NavMeshAgentコンポーネント
+    public float moveSpeed = 5f; // タックルの移動速度
 
-    public float detectionRanege = 80f; //Playerを検知する距離
+    public GameObject bulletPrefab; // 飛ばす球のプレハブ
+    public GameObject gate; // 球を生成する位置
+    public float bulletSpeed = 100f; // 球の速度
 
-    bool isAttack; //攻撃中のフラグ
-    public float attackRange = 30f; //攻撃可能距離
-    public float stopRange = 5f; //近接限界距離
+    public GameObject barrierPrefab; // バリアのオブジェクト
 
-    public GameObject bulletPrefab; //弾のプレハブ
-    //public GameObject gate; //弾の発射位置
-    public float bulletSpeed = 100f;
-    public float fireInterval = 2.0f;
-    bool lockOn = true; //ターゲットを向くかどうかの判定
+    GameObject player; // Player
+    bool isAttacking; // 攻撃中かどうか
 
-    float timer; //時間経過
+    public GameObject explosionPrefab; //爆発エフェクト
 
-    GameObject gameManager; //GameManagerオブジェクト
-
-    Rigidbody rbody; //Rigidbodyコンポーネント
-    AudioSource audio; //AudioSourceコンポーネント
-    //Animator animator; //Animatorコンポーネント
+    AudioSource audioSource;
+    public AudioClip se_Shot;
+    public AudioClip se_Damage;
+    public AudioClip se_Tackle;
+    public AudioClip se_Barrier;
+    public AudioClip se_Explosion;
 
     void Start()
     {
-        rbody = GetComponent<Rigidbody>();    // Rigidbodyを得る
-        player = GameObject.FindGameObjectWithTag("Player"); //Playerをタグで取得
-        controller = GetComponent<CharacterController>();
+        // Playerオブジェクトを探し、Transformを取得
+        player = GameObject.FindGameObjectWithTag("Player");
 
-        audio = GetComponent<AudioSource>();
-
-        //animator = GetComponent<Animator>();
-        //animator.SetBool("Active", true);
+        audioSource = GetComponent<AudioSource>();
     }
 
-    // Update is called once per frame
     void Update()
     {
-        //playingモードの場合は何もしない
-        if (GameManager.gameState == GameState.playing) return;
+        //ゲーム状態がプレイ中でなければ何もしない
+        if (GameManager.gameState != GameState.playing) return;
+        if (bossHP <= 0) return;
+        if (player == null) return;
 
-        //PlayerまたはBossがいない場合は何もしない
-        if (player == null || body == null) return;
-
-        //enemyHPが0以下なら何もしない
-        if (enemyHP <= 0) return;
-
-        //isDamageがONなら点滅処理(BattleCart参照)
-        if (isSDamege)
+        // ダメージ中の点滅処理
+        if (isDamage)
         {
-            moveDirection.x = 0;
-            moveDirection.z = 0;
-            recoverTime -= Time.deltaTime; //時間を減らす
-
             Blinking();
         }
 
-        //プレイヤーとの距離をつねに測る
-        Vector3 playerPos = player.transform.position;
-        Vector3 bossPos = transform.position;
-        float dist = Vector3.Distance(playerPos, bossPos); //PlayerとBossの距離計測
-        Debug.Log("距離" + dist);
-
-        float ds = dist / times; //1秒あたりの移動距離
-        float df = ds * Time.deltaTime; //1フレームあたりの移動距離
-        movep += df / dist; //終点までの進捗率を更新（0～1.0f）
+        if (isAttacking) return; // 攻撃中は処理をスキップ
 
 
+        timer += Time.deltaTime; //ゲームの経過時間
 
-        if (lockOn) //lockOnがON(true)の時
+        //プレイヤーとの距離を測る
+        float distanceToPlayer = Vector3.Distance(transform.position, player.transform.position);
+
+        // 攻撃のクールダウン
+        if (timer >= attackInterval)
         {
-            //Transform.LookAtでプレイヤーを向く
-            body.transform.LookAt(playerPos);
-
-            if (dist <= detectionRanege)   //プレイヤーが検知内
+            isAttacking = true; //攻撃中フラグをON
+            if (distanceToPlayer <= closeRange)　// Playerが近い時
             {
-                //playerに向かって歩く
-                //Lerp用移動
-                transform.position = Vector3.Lerp(bossPos, playerPos, movep);
+                // バリアを展開
+                StartCoroutine(ActivateBarrier());
             }
-
-            if (dist <= attackRange) //プレイヤーが攻撃範囲内
+            else　// Playerが遠い時 (detectionRange内)
             {
-                //playerに向かって歩く
-                transform.position = Vector3.Lerp(bossPos, playerPos, movep);
+                // タックルか球を飛ばすかをランダムで決定
+                int randomAction = Random.Range(0, 2); // 0: タックル, 1: 球を飛ばす
 
-                Shot(); //攻撃メソッド
+                if (randomAction == 0)
+                {
+                    StartCoroutine(Tackle());　//タックル
+                }
+                else
+                {
+                    StartCoroutine(ShootProjectile()); //シュート
+                }
             }
-                
-            void Shot()
-            {
-                if (!isAttack) return; 
-                isAttack = true; //攻撃中フラグを立てる
-                // Gateの回転にX軸90度だけ回転
-                Quaternion bulletRotation = gate.transform.rotation * Quaternion.Euler(90, 0, 0);
-                GameObject obj = Instantiate(
-                    bulletPrefab,
-                    gate.transform.position,
-                    bulletRotation);
-
-                //弾のRigidbodyを取得
-                Rigidbody rbody = obj.GetComponent<Rigidbody>();
-                // 計算した方向にショット
-                rbody.AddForce(gate.transform.forward * bulletSpeed, ForceMode.Impulse);
-
-                StartCoroutine(FireInterval()); //一定時間待つコルーチン
-                Invoke("AttackOff", timer); //一定時間待ってから攻撃フラグ解除
-            }
-
-
-            //残数の回復コルーチン
-            IEnumerator FireInterval()
-            {
-                //一定時間待つ
-                yield return new WaitForSeconds(fireInterval);
-            }
-
-             //攻撃フラグ解除
-            void AttackOFF()
-            {
-                isAttack = false; //攻撃フラグ解除
-            }
+            timer = 0; //リセット
         }
-       
-       
-            // Mathf.Atan2(dz, dx) * Mathf.Rad2Deg; //ラジアンを度に変換
-            //(isAttack)なら何もしない
-            //攻撃範囲内では移動はゆっくり　※例えば通常の半分
-            //timerで計測し、時間が来たら攻撃コルーチン
-            //　→プレイヤーが攻撃範囲外
-            //通常のスピードでプレイヤーを追ってくる
-            //→プレイヤーが検知外
-            //　・NavMeshAgentの動きがとまる
     }
-    //点滅処理
+
+    //タックルコルーチン
+    IEnumerator Tackle()
+    {
+        audioSource.PlayOneShot(se_Tackle);
+        Vector3 startPosition = transform.position;
+        Vector3 targetPosition = player.transform.position;
+        float startTime = Time.time;
+        float duration = Vector3.Distance(startPosition, targetPosition) / moveSpeed;
+
+        // Playerの方向を向く
+        transform.LookAt(player.transform);
+
+        while (Time.time < startTime + duration)
+        {
+            // Playerに向かって移動
+            transform.position = Vector3.Lerp(startPosition, targetPosition, (Time.time - startTime) / duration);
+            yield return null; // 1フレーム待つ
+        }
+        transform.position = targetPosition; // 最終的に目標位置に到達させる
+
+        isAttacking = false; //攻撃フラグをOFF
+    }
+
+    //シュートコルーチン
+    IEnumerator ShootProjectile()
+    {
+        audioSource.PlayOneShot(se_Shot);
+        // Playerの方向を向く
+        transform.LookAt(player.transform);
+
+        yield return new WaitForSeconds(1.0f); // 球を飛ばすアニメーションや演出の時間
+
+        //EnemyBulletの生成
+        Quaternion bulletRotation = gate.transform.rotation * Quaternion.Euler(90, 0, 0); // 必要であればコメント解除
+        GameObject bulletObj = Instantiate(
+            bulletPrefab,
+            gate.transform.position,
+            bulletRotation
+        );
+
+        Rigidbody rbody = bulletObj.GetComponent<Rigidbody>();
+
+        // Playerへの方向ベクトルを計算 (firePointからPlayerへ)
+        Vector3 directionToPlayer = (player.transform.position - gate.transform.position).normalized;
+
+        // 弾を発射する
+        rbody.AddForce(directionToPlayer * bulletSpeed, ForceMode.Impulse);
+
+        yield return new WaitForSeconds(0.5f); // 球を飛ばすアニメーションや演出の時間
+
+        isAttacking = false; //攻撃フラグをOFF
+    }
+
+    //バリアの展開
+    IEnumerator ActivateBarrier()
+    {
+        audioSource.PlayOneShot(se_Barrier);
+        // バリアをその場に生成
+        GameObject obj = Instantiate(
+            barrierPrefab,
+            transform.position + new Vector3(0, 5.0f, 0),
+            Quaternion.identity
+        );
+
+        float durationTime = obj.GetComponent<Barrier>().deleteTime;
+
+        yield return new WaitForSeconds(durationTime); // 指定時間待つ
+
+        isAttacking = false; //攻撃フラグをOFF
+    }
+
+    //接触したら
+    private void OnTriggerEnter(Collider other)
+    {
+        //プレイヤーの攻撃に当たったら
+        if (other.gameObject.CompareTag("PlayerBullet") || other.gameObject.CompareTag("PlayerSword"))
+        {
+            //ダメージ中なら何もしない
+            if (isDamage) return;
+
+
+            audioSource.PlayOneShot(se_Damage);
+
+            //接近攻撃なら
+            if (other.gameObject.CompareTag("PlayerSword"))
+            {
+                bossHP -= 3; //敵のHPを2つマイナス
+            }
+            else
+            {
+                bossHP--; //敵のHPをマイナス
+            }
+            isDamage = true;//ダメージ中フラグ
+
+            //HPがなくなったら削除
+            if (bossHP <= 0)
+            {
+                audioSource.PlayOneShot(se_Explosion);
+
+                //爆発エフェクトの生成
+                GameObject obj = Instantiate(
+                    explosionPrefab,
+                    transform.position,
+                    Quaternion.identity
+                    );
+
+                obj.transform.SetParent(transform);
+
+                GameManager.gameState = GameState.gameclear;
+                Destroy(gameObject, 3.0f); //ボスの消失
+            }
+
+            //ダメージリセット
+            StartCoroutine(DamageReset());
+        }
+    }
+
+    //ダメージリセットのコルーチン
+    IEnumerator DamageReset()
+    {
+        yield return new WaitForSeconds(1.0f); // 点滅時間
+
+        isDamage = false; //ダメージ中の解除
+        body.SetActive(true); //明確に姿を表示
+    }
+
+    //点滅メソッド
     void Blinking()
     {
-        //正負をSin関数で算出
-        float val = Mathf.Sin(Time.deltaTime * 50);
-
-        //正の周期なら表示、負の周期なら非表示
-        if (val >= 0) body.SetActive(true);
+        float val = Mathf.Sin(Time.time * 50);
+        if (val > 0) body.SetActive(true);
         else body.SetActive(false);
     }
 
-    bool isDamage()
+    // ギズモで範囲を表示（デバッグ用）
+    void OnDrawGizmosSelected()
     {
-        //recoverTimeがHPが0より大きい場合はisDamageフラグがON
-        bool damaged = recoverTime > 0.0f || enemyHP >= 0;
-
-        //isDamageフラグがOFFの場合はPlayerのbodyを確実に表示
-        if (!damaged) body.SetActive(true);
-
-        //damagedフラグをリターン
-        return damaged;
+        Gizmos.color = Color.yellow;
+        Gizmos.DrawWireSphere(transform.position, closeRange);
     }
 }

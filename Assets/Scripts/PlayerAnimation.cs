@@ -2,53 +2,90 @@ using UnityEngine;
 
 public class PlayerAnimation : MonoBehaviour
 {
-    public Animator anime;
+    
 
-    float axisH;
-    float axisV;
-
-    void Start()
-    {
-        
-    }
+    public Animator animator; // Animatorコンポーネント
+    bool isDeadAnime; //死亡アニメが未実行かどうか
 
     void Update()
     {
-        if (axisH != 0 || axisV != 0)
+        //プレイ中でなければ
+        if (GameManager.gameState != GameState.playing)
         {
-            anime.SetBool("walk", true);
-
-            if (Input.GetAxisRaw("Horizontal") > 0)
+            //ゲームオーバー状態ならDeadアニメを一度発動させる
+            if (GameManager.gameState == GameState.gameover)
             {
-                anime.SetInteger("direction", 3);
+                if (!isDeadAnime)
+                {
+                    DeadAnimation();
+                }
             }
-            if (Input.GetAxisRaw("Horizontal") < 0)
-            {
-                anime.SetInteger("direction", 1);
-            }
-            if (Input.GetAxisRaw("Vertical") > 0)
-            {
-                anime.SetInteger("direction", 0);
-            }
-            if (Input.GetAxisRaw("Vertical") < 0)
-            {
-                anime.SetInteger("direction", 2);
-            }
-            
-        }
-        else
-        {
-            anime.SetBool("walk", false);
+            return; //プレイ中じゃない時点で後は何もしない
         }
 
-        //�X�y�[�X�L�[�������ꂽ��
-        if (Input.GetButtonDown("Jump"))
-        {
-            Debug.Log("janp");
-            anime.SetTrigger("Jump");
-        }
-        //���N���b�N���ꂽ��Z�b�g�g���K�[�V���b�g
-        //�Q�[���X�e�[�^�X���Q�[���I�[�o�[�ɂȂ�����die
+        MoveAnimation(); // 移動アニメーション
+        AttackAnimation();   // 攻撃アニメーション
+        JumpAnimation();   // ジャンプアニメーション
 
+    }
+
+    //移動アニメ
+    void MoveAnimation()
+    {
+        //まずはWalkフラグをOFF
+        bool isMoving = false;
+
+        //左右キーが入ったらそれぞれの方向
+        if (Input.GetAxisRaw("Horizontal") > 0)
+        {
+            animator.SetInteger("direction", 3);
+            isMoving = true;
+        }
+        else if (Input.GetAxisRaw("Horizontal") < 0)
+        {
+            animator.SetInteger("direction", 1);
+            isMoving = true;
+        }
+
+        //上下キーが入ったらそれぞれの方向
+        if (Input.GetAxisRaw("Vertical") > 0)
+        {
+            animator.SetInteger("direction", 0);
+            isMoving = true;
+        }
+        else if (Input.GetAxisRaw("Vertical") < 0)
+        {
+            animator.SetInteger("direction", 2);
+            isMoving = true;
+        }
+
+        //入力状況に応じてWalkフラグが立つか立たないか
+        animator.SetBool("walk", isMoving);
+
+    }
+
+    //攻撃アニメ
+    void AttackAnimation()
+    {
+        if (Input.GetMouseButtonDown(0))
+        {
+            animator.SetTrigger("shot");
+        }
+    }
+
+    //ジャンプアニメ
+    void JumpAnimation()
+    {
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            animator.SetTrigger("jump");
+        }
+    }
+
+    //死亡アニメ
+    void DeadAnimation()
+    {
+        animator.SetTrigger("die");
+        isDeadAnime = true;
     }
 }
