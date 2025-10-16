@@ -1,4 +1,5 @@
 using System.Collections;
+using UnityEditor.Animations;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -40,7 +41,9 @@ public class EnemyController : MonoBehaviour
     [SerializeField] AudioClip se_Damage;
     [SerializeField] AudioClip se_Exprosion;
 
-
+    [SerializeField] GameObject flamePrefab; 
+     Animator animator;
+   
 
 
     GameObject gameMgr; //ゲームマネージャーusing UnityEngine;
@@ -54,6 +57,7 @@ public class EnemyController : MonoBehaviour
         navMeshAgent = GetComponent<NavMeshAgent>();
         player = GameObject.FindGameObjectWithTag("Player"); //生成されるたびにplayerのtransformを取得
         audio = GetComponent<AudioSource>();
+        animator = GetComponent<Animator>();
 
     }
 
@@ -133,13 +137,18 @@ public class EnemyController : MonoBehaviour
         if (enemyHP <= 0)
         {
             if (!death)
+            {
                 //死んだらEnemyListを削除   
                 //gameManager.enemyList.RemoveAt(0);
-
+                
+                animator.SetBool("die", false);
                 SEPlay(SEType.Explosion);
-            death = true;
-            //自分も破壊
-            Destroy(gameObject);
+                Instantiate(flamePrefab, transform.position, Quaternion.identity);
+                death = true;
+                //自分も破壊
+                Destroy(gameObject);
+            }
+                          
 
         }
 
