@@ -1,10 +1,6 @@
 using System.Collections;
-using UnityEditor.Animations;
 using UnityEngine;
 using UnityEngine.AI;
-
-
-
 
 public class EnemyController : MonoBehaviour
 {
@@ -42,22 +38,19 @@ public class EnemyController : MonoBehaviour
     [SerializeField] AudioClip se_Exprosion;
 
     [SerializeField] GameObject flamePrefab; 
-     Animator animator;
+    public Animator animator;
    
 
 
     GameObject gameMgr; //ゲームマネージャーusing UnityEngine;
-    GameManager gameManager;//List削除する時に使うかも
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
         gameMgr = GameObject.FindGameObjectWithTag("GM");
-        gameManager = gameMgr.GetComponent<GameManager>();
         navMeshAgent = GetComponent<NavMeshAgent>();
         player = GameObject.FindGameObjectWithTag("Player"); //生成されるたびにplayerのtransformを取得
         audio = GetComponent<AudioSource>();
-        animator = GetComponent<Animator>();
 
     }
 
@@ -138,18 +131,13 @@ public class EnemyController : MonoBehaviour
         {
             if (!death)
             {
-                //死んだらEnemyListを削除   
-                //gameManager.enemyList.RemoveAt(0);
-                
-                animator.SetBool("die", false);
-                SEPlay(SEType.Explosion);
-                Instantiate(flamePrefab, transform.position, Quaternion.identity);
-                death = true;
-                //自分も破壊
-                Destroy(gameObject);
-            }
-                          
+                //死んだらEnemyListを削除
+                gameMgr.GetComponent<GameManager>().enemyList.RemoveAt(0);
 
+                //gameManager.enemyList.RemoveAt(0);
+                StartCoroutine(Dead());
+            }
+                         
         }
 
         if (IsDamage())//覚えておく。IsDamageメソッド発動してからそれの値がtureなら　覚えておく。
@@ -157,8 +145,19 @@ public class EnemyController : MonoBehaviour
             recoverTime -= Time.deltaTime;//recoverTimeが0になるまで経過時間を引く
             Blinking();//点滅処理  
         }
+    }
 
+    IEnumerator Dead()
+    {
+        death = true;
 
+        animator.SetTrigger("die");
+        SEPlay(SEType.Explosion);
+        Instantiate(flamePrefab, transform.position, flamePrefab.transform.rotation);
+
+        yield return new WaitForSeconds(1);
+        //自分も破壊
+        Destroy(gameObject);
 
     }
 
@@ -201,6 +200,7 @@ public class EnemyController : MonoBehaviour
         {
             enemyHP = enemyHP - 3;
 
+            recoverTime = 0.5f;//当たった時
             SEPlay(SEType.Damage);
 
             Debug.Log(enemyHP);

@@ -44,17 +44,9 @@ public class PlayerController : MonoBehaviour
     {
 
         //もしゲームステータスがPlayingかgameClearじゃないならなにもしない
-        if (GameManager.gameState != GameState.playing || GameManager.gameState != GameState.gameclear)
+        if (GameManager.gameState != GameState.playing && GameManager.gameState != GameState.gameclear)
         {
-            //return;
-
-            //もし〇キーが押されたら△に動く
-            if (Input.GetKeyDown(KeyCode.LeftArrow) || Input.GetKeyDown(KeyCode.A)) MoveToLeft();
-            if (Input.GetKeyDown(KeyCode.RightArrow) || Input.GetKeyDown(KeyCode.D)) MoveToRight();
-            if (Input.GetKeyDown(KeyCode.UpArrow) || Input.GetKeyDown(KeyCode.W)) MoveToUp();
-            if (Input.GetKeyDown(KeyCode.DownArrow) || Input.GetKeyDown(KeyCode.S)) MoveToDown();
-            if (Input.GetKeyDown(KeyCode.Space)) Jump();
-
+            return;
             
         }
 
@@ -62,6 +54,13 @@ public class PlayerController : MonoBehaviour
         //もし地面に接地していたら
         if (controller.isGrounded)
         {
+
+            //もし〇キーが押されたら△に動く
+            //if (Input.GetKeyDown(KeyCode.LeftArrow) || Input.GetKeyDown(KeyCode.A)) MoveToLeft();
+            //if (Input.GetKeyDown(KeyCode.RightArrow) || Input.GetKeyDown(KeyCode.D)) MoveToRight();
+            //if (Input.GetKeyDown(KeyCode.UpArrow) || Input.GetKeyDown(KeyCode.W)) MoveToUp();
+            //if (Input.GetKeyDown(KeyCode.DownArrow) || Input.GetKeyDown(KeyCode.S)) MoveToDown();
+
             //足音
             HandleFootsteps();
 
@@ -70,7 +69,7 @@ public class PlayerController : MonoBehaviour
             float vertical = Input.GetAxis("Vertical");
 
             // ローカル座標系での移動方向
-            Vector3 moveDirection = new Vector3(horizontal, 0, vertical);
+            moveDirection = new Vector3(horizontal, 0, vertical);
 
             // 正規化して速度を一定に保つ
             if (moveDirection.magnitude > 1)
@@ -78,12 +77,11 @@ public class PlayerController : MonoBehaviour
                 moveDirection.Normalize();
             }
 
-            // TransformDirectionでローカル座標からワールド座標に変換
-            // これにより、プレイヤーの回転が考慮される
-            Vector3 worldMoveDirection = transform.TransformDirection(moveDirection);
+            moveDirection *= moveSpeed; //スピードで倍増
+       
 
-            // CharacterController.Moveにワールド座標での移動量を渡す
-            controller.Move(worldMoveDirection * moveSpeed * Time.deltaTime);
+            //ジャンプ
+            if (Input.GetKeyDown(KeyCode.Space)) Jump();
 
         }
 
@@ -110,31 +108,31 @@ public class PlayerController : MonoBehaviour
 
     }
 
-    public void MoveToLeft()
-    {
-        if (IsStun()) return;
-        SEPlay(SEType.Walk);
-    }
+    //public void MoveToLeft()
+    //{
+    //    if (IsStun()) return;
+    //    SEPlay(SEType.Walk);
+    //}
 
-    public void MoveToRight()
-    {
-        if (IsStun()) return;
-        SEPlay(SEType.Walk);
-    }
+    //public void MoveToRight()
+    //{
+    //    if (IsStun()) return;
+    //    SEPlay(SEType.Walk);
+    //}
 
-    public void MoveToUp()
-    {
-        if (IsStun()) return;
-        SEPlay(SEType.Walk);
+    //public void MoveToUp()
+    //{
+    //    if (IsStun()) return;
+    //    SEPlay(SEType.Walk);
 
-    }
+    //}
 
-    public void MoveToDown()
-    {
-        if (IsStun()) return;
-        SEPlay(SEType.Walk);
+    //public void MoveToDown()
+    //{
+    //    if (IsStun()) return;
+    //    SEPlay(SEType.Walk);
 
-    }
+    //}
 
     void Jump()
     {
@@ -172,11 +170,9 @@ public class PlayerController : MonoBehaviour
         //ぶつかった相手がEnemyかEnemyBulletなら
         if (hit.gameObject.CompareTag("Enemy") || hit.gameObject.CompareTag("EnemyBullet"))
         {
-            Debug.Log("atata");
             SEPlay(SEType.Damage);
 
             //体力をマイナス
-            //life--;
             GameManager.playerHP--;
             recoverTime = 0.5f;
 

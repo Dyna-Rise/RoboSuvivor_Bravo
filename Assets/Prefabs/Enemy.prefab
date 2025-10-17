@@ -182,8 +182,7 @@ MonoBehaviour:
   se_Damage: {fileID: 8300000, guid: 0d30ac30267e842419537598daf5f23d, type: 3}
   se_Exprosion: {fileID: 8300000, guid: 0bdbb689c62e18943b959eb8102051b0, type: 3}
   flamePrefab: {fileID: 11221310824418764, guid: aa39998c8818a584ba24965d950e51b1, type: 3}
-  animator: {fileID: 0}
-  animatorController: {fileID: 0}
+  animator: {fileID: 7963654138674662152}
 --- !u!136 &6683042985204019288
 CapsuleCollider:
   m_ObjectHideFlags: 0
@@ -709,5 +708,10 @@ PrefabInstance:
 --- !u!4 &7963654138667148458 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 7072444061591351794, guid: 910177ec26b76c14996c2d53627a6def, type: 3}
+  m_PrefabInstance: {fileID: 910513661580809560}
+  m_PrefabAsset: {fileID: 0}
+--- !u!95 &7963654138674662152 stripped
+Animator:
+  m_CorrespondingSourceObject: {fileID: 7072444061582351952, guid: 910177ec26b76c14996c2d53627a6def, type: 3}
   m_PrefabInstance: {fileID: 910513661580809560}
   m_PrefabAsset: {fileID: 0}
