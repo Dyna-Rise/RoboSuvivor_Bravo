@@ -84,7 +84,9 @@ public class EnemyController : MonoBehaviour
         {
             navMeshAgent.SetDestination(playerPos);//playerを追う
             navMeshAgent.isStopped = false;//止めるフラグOFF
-            lockOn = true;//プレイヤーの方を向くフラグをON
+
+            if(!isAttack) lockOn = true;//プレイヤーの方を向くフラグをON 　変更点　Attackなら止めるように変更
+
 
 
             //攻撃距離内だったら
@@ -165,6 +167,8 @@ public class EnemyController : MonoBehaviour
     {
         isAttack = true;
         lockOn = false;
+        yield return new WaitForSeconds(1f); //変更点　待ってから撃つ
+
         GameObject obj = Instantiate(bulletPrefab, gate.transform.position, gate.transform.rotation * Quaternion.Euler(90, 0, 0));
 
         obj.GetComponent<Rigidbody>().AddForce(gate.transform.forward * bulletSpeed, ForceMode.Impulse);
@@ -176,7 +180,7 @@ public class EnemyController : MonoBehaviour
         //Debug.Log("攻撃中だよ");
         //yield return new WaitForSeconds(1);
         isAttack = false;
-        lockOn = true;
+        lockOn = true;　　　　　　　　　　　
         yield break;
     }
 
@@ -253,5 +257,4 @@ public class EnemyController : MonoBehaviour
         }
     }
 
-   
 }
