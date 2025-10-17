@@ -399,7 +399,7 @@ MonoBehaviour:
   dashSpeedMultiplier: 2
   maxDashStamina: 100
   currentDashStamina: 0
-  dashStaminaConsumptionRate: 30
+  dashStaminaConsumptionRate: 20
   dashStaminaRecoveryRate: 20
   dashStaminaRecoveryDelay: 1
   doublePressTimeThreshold: 0.2
