@@ -44,13 +44,20 @@ public class Shooter : MonoBehaviour
         GameManager.shotRemainingNum--; //残数を減らす
 
         // Gateの回転にX軸90度だけ回転
-        Quaternion bulletRotation = gate.transform.rotation * Quaternion.Euler(90, 0, 0);
+        //Quaternion bulletRotation = gate.transform.rotation * Quaternion.Euler(90, 0, 0);
 
         //弾の生成
+        //GameObject obj = Instantiate(
+        //    bulletPrefab,
+        //    gate.transform.position,
+        //    bulletRotation);
+
+        //弾の生成（カメラ基準）
         GameObject obj = Instantiate(
             bulletPrefab,
             gate.transform.position,
-            bulletRotation);
+            Camera.main.transform.rotation * Quaternion.Euler(70,0,0)
+            );
 
         //弾のRigidbodyを取得
         Rigidbody rbody = obj.GetComponent<Rigidbody>();
