@@ -153,6 +153,6 @@ MonoBehaviour:
   followSpeed: 8
   defaultPos: {x: 0, y: 3.5, z: 23}
   defaultRotate: {x: 20, y: 0, z: 0}
-  mouseSensitivity: 3
+  mouseSensitivity: 5
   minVerticalAngle: -15
   maxVerticalAngle: 15
