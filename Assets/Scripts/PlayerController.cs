@@ -168,7 +168,7 @@ public class PlayerController : MonoBehaviour
         if (IsStun()) return;
 
         //ぶつかった相手がEnemyかEnemyBulletなら
-        if (hit.gameObject.CompareTag("Enemy") || hit.gameObject.CompareTag("EnemyBullet"))
+        if (hit.gameObject.CompareTag("Enemy") || hit.gameObject.CompareTag("EnemyBullet") || hit.gameObject.CompareTag("Barrier"))
         {
             SEPlay(SEType.Damage);
 
