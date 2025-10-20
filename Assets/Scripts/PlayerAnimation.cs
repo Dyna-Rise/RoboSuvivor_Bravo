@@ -1,5 +1,6 @@
 using UnityEngine;
 
+//ã‚³ãƒ¼ãƒ‰ãƒ¬ãƒ“ãƒ¥ãƒ¼
 public class PlayerAnimation : MonoBehaviour
 {
     public Animator anime;
@@ -41,14 +42,14 @@ public class PlayerAnimation : MonoBehaviour
             anime.SetBool("walk", false);
         }
 
-        //ƒXƒy[ƒXƒL[‚ª‰Ÿ‚³‚ê‚½‚ç
+        //ã‚¹ãƒšãƒ¼ã‚¹ã‚­ãƒ¼ãŒæŠ¼ã•ã‚ŒãŸã‚‰
         if (Input.GetButtonDown("Jump"))
         {
             Debug.Log("janp");
             anime.SetTrigger("Jump");
         }
-        //¶ƒNƒŠƒbƒN‚³‚ê‚½‚çƒZƒbƒgƒgƒŠƒK[ƒVƒ‡ƒbƒg
-        //ƒQ[ƒ€ƒXƒe[ƒ^ƒX‚ªƒQ[ƒ€ƒI[ƒo[‚É‚È‚Á‚½‚çdie
+        //å·¦ã‚¯ãƒªãƒƒã‚¯ã•ã‚ŒãŸã‚‰ã‚»ãƒƒãƒˆãƒˆãƒªã‚¬ãƒ¼ã‚·ãƒ§ãƒƒãƒˆ
+        //ã‚²ãƒ¼ãƒ ã‚¹ãƒ†ãƒ¼ã‚¿ã‚¹ãŒã‚²ãƒ¼ãƒ ã‚ªãƒ¼ãƒãƒ¼ã«ãªã£ãŸã‚‰die
 
     }
 }
